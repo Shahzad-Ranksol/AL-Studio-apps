@@ -1,0 +1,7 @@
+{
+  "name": "PakConstruct Pro",
+  "description": "A comprehensive construction planning and cost estimation suite specifically designed for the Pakistan market, featuring real-time material tracking and AI-powered architectural guidance.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
