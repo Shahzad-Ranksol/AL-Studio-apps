@@ -1,13 +1,15 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { PRICE_HISTORY_DATA, CURRENT_MARKET_PRICES } from '../constants';
+// Fix: Import DEFAULT_MARKET_PRICES instead of non-existent CURRENT_MARKET_PRICES
+import { PRICE_HISTORY_DATA, DEFAULT_MARKET_PRICES } from '../constants';
 
 const MarketTrends: React.FC = () => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {CURRENT_MARKET_PRICES.map((item) => (
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Fix: Map over DEFAULT_MARKET_PRICES and updated grid-cols-4 since there are 4 main materials */}
+        {DEFAULT_MARKET_PRICES.map((item) => (
           <div key={item.type} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start mb-2">
               <span className="text-sm font-semibold text-slate-500 uppercase">{item.type}</span>

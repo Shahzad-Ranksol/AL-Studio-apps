@@ -9,12 +9,16 @@ export enum MaterialType {
   TILES = 'Tiles'
 }
 
+export type AvailabilityStatus = 'In Stock' | 'Low Stock' | 'Out of Stock';
+
 export interface MaterialPrice {
   type: MaterialType;
   unit: string;
   price: number;
   lastUpdated: string;
   trend: 'up' | 'down' | 'stable';
+  availability: AvailabilityStatus;
+  change24h: number; // Percentage change
 }
 
 export interface EstimationResult {
