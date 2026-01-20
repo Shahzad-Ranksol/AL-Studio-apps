@@ -51,7 +51,7 @@ export interface ConstructionInputs {
   hasDrawing: boolean;
   hasDining: boolean;
   steelGrade: 'Grade 40' | 'Grade 60';
-  floorFinish: 'Tiles' | 'Marble' | 'Concrete';
+  floorFinish: 'Tiles' | 'Marble' | 'Concrete' | 'Granite' | 'Wooden';
   foundationType: 'Shallow/Strip' | 'Raft' | 'Piles';
   beamReinforcement: 'Standard' | 'Heavy';
 }
