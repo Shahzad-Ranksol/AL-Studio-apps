@@ -5,7 +5,7 @@ import { ChatMessage } from '../types';
 
 const AIAssistant: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', content: "Assalam-o-Alaikum! I'm your PakConstruct AI assistant. How can I help you with your construction project in Pakistan today? I can estimate costs, explain building bylaws, or suggest materials." }
+    { role: 'model', content: "Assalam-o-Alaikum! I'm your PakConstruct Compliance & Design Advisor. I can help you with LDA, CDA, and SBCA building codes, floor area ratios (FAR), setbacks, and structural planning. What's on your mind today?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -13,18 +13,25 @@ const AIAssistant: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const QUICK_QUERIES = [
+    { label: "LDA 5-Marla Setbacks", query: "What are the required front and rear setbacks for a 5 Marla residential plot under LDA bylaws in Lahore?" },
+    { label: "CDA High-Rise Rules", query: "What are the latest CDA regulations for high-rise apartment buildings in Islamabad (E-11 or Markaz)?" },
+    { label: "Commercialization Fee", query: "How is the commercialization fee calculated for a residential property on a major road in Faisalabad?" },
+    { label: "SBCA Rooftop Access", query: "What are the SBCA rules for rooftop structures and open terraces in Karachi?" }
+  ];
+
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(scrollToBottom, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (customMessage?: string) => {
+    const userMsg = customMessage || input.trim();
+    if (!userMsg || isLoading) return;
 
-    const userMsg = input.trim();
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-    setInput('');
+    if (!customMessage) setInput('');
     setIsLoading(true);
 
     try {
@@ -60,72 +67,139 @@ const AIAssistant: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const formatMessage = (content: string) => {
+    // Basic Markdown-like formatting for links and bold text
+    return content.split('\n').map((line, i) => {
+      // Check for links [title](url)
+      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      let parts = [];
+      let lastIndex = 0;
+      let match;
+      
+      while ((match = linkRegex.exec(line)) !== null) {
+        parts.push(line.substring(lastIndex, match.index));
+        parts.push(
+          <a key={match[2]} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-emerald-500 underline font-bold hover:text-emerald-600">
+            {match[1]}
+          </a>
+        );
+        lastIndex = match.index + match[0].length;
+      }
+      parts.push(line.substring(lastIndex));
+
+      return <p key={i} className="mb-2">{parts}</p>;
+    });
+  };
+
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-      <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-xs">AI</div>
+    <div className="flex flex-col h-[700px] bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
+      {/* Assistant Header */}
+      <div className="bg-slate-900 text-white p-6 flex justify-between items-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-emerald-500/20 to-transparent pointer-events-none"></div>
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center font-black text-lg shadow-lg rotate-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.7 7.3"/><path d="M12 12l9.3 4.7"/></svg>
+          </div>
           <div>
-            <h3 className="font-bold text-sm">PakConstruct AI Assistant</h3>
-            <p className="text-[10px] text-slate-400">Powered by Gemini</p>
+            <h3 className="font-black text-base tracking-tight uppercase">Regulatory Advisor</h3>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Grounding Active (LDA/CDA/SBCA)</p>
+            </div>
           </div>
         </div>
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className="text-slate-300 hover:text-white transition-colors"
-          title="Upload site photo for AI analysis"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-        </button>
+        <div className="flex items-center gap-3 relative z-10">
+           <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white border border-white/5"
+            title="Analyze site photo"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+        </div>
         <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+      {/* Quick Queries Area */}
+      <div className="p-4 bg-slate-50 border-b border-slate-100">
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-emerald-500"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Suggested Compliance Checks</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {QUICK_QUERIES.map((q, i) => (
+            <button 
+              key={i}
+              onClick={() => handleSend(q.query)}
+              disabled={isLoading}
+              className="text-[10px] font-black text-slate-600 bg-white border border-slate-200 px-3 py-2 rounded-xl hover:border-emerald-400 hover:text-emerald-600 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            >
+              {q.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chat History */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${
+          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[85%] p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-sm ${
               msg.role === 'user' 
-                ? 'bg-emerald-600 text-white rounded-tr-none' 
-                : 'bg-white border border-slate-200 text-slate-700 shadow-sm rounded-tl-none'
+                ? 'bg-slate-900 text-white rounded-tr-none' 
+                : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none font-medium'
             }`}>
-              {msg.content.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
+              {formatMessage(msg.content)}
             </div>
           </div>
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none animate-pulse flex gap-1">
-              <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce"></div>
-              <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce delay-75"></div>
-              <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce delay-150"></div>
+            <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none flex gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-75"></div>
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce delay-150"></div>
             </div>
           </div>
         )}
         {isAnalyzingImage && (
-          <div className="text-center text-xs text-slate-400 py-2">Analyzing site photo...</div>
+          <div className="flex justify-center">
+            <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 animate-pulse">
+              Running Site Analysis Engine...
+            </div>
+          </div>
         )}
         <div ref={chatEndRef} />
       </div>
 
-      <div className="p-4 border-t border-slate-100 bg-white">
+      {/* Input Area */}
+      <div className="p-6 border-t border-slate-100 bg-white">
         <form 
           onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-          className="flex gap-2"
+          className="flex gap-3"
         >
-          <input 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about materials, costs, or bylaws..."
-            className="flex-1 px-4 py-2 bg-slate-100 border-none rounded-full text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-          />
+          <div className="flex-1 relative">
+            <input 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about setbacks, FAR, zoning fees, or bylaws..."
+              className="w-full pl-6 pr-12 py-4 bg-slate-100 border-none rounded-[1.5rem] text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
+            />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+          </div>
           <button 
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-emerald-700 transition-all shadow-lg"
+            className="w-14 h-14 bg-emerald-600 text-white rounded-[1.25rem] flex items-center justify-center disabled:opacity-50 hover:bg-emerald-700 transition-all shadow-xl hover:shadow-emerald-500/20 active:scale-95"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="rotate-45 -translate-x-0.5"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </form>
+        <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4">
+          Always cross-check advice with physical LDA/CDA documents before construction.
+        </p>
       </div>
     </div>
   );

@@ -2,24 +2,60 @@
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { ChatMessage, MaterialType, MaterialPrice } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const getConstructionAdvice = async (history: ChatMessage[], message: string) => {
-  const chat = ai.chats.create({
-    model: 'gemini-3-flash-preview',
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // We use generateContent instead of chat for search-grounded technical advice
+  // to ensure building codes (which change frequently) are up-to-date.
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: [
+      { role: 'user', parts: [{ text: `Previous conversation history: ${JSON.stringify(history.slice(-4))}` }] },
+      { role: 'user', parts: [{ text: message }] }
+    ],
     config: {
-      systemInstruction: `You are an expert Pakistani Civil Engineer and Construction Consultant. 
-      Help users with construction planning, materials, building codes (LDA, CDA, SBCA, KDA), and cost-saving tips specifically for the Pakistan market. 
-      Use local terminology like Marla, Kanal, Grey Structure, and Finishing. 
-      Always provide advice within the context of Pakistan's climate, material availability, and economic conditions.`,
+      systemInstruction: `You are an expert Pakistani Civil Engineer and Building Code Consultant. 
+      Specialize in regulations for:
+      - LDA (Lahore Development Authority)
+      - CDA (Capital Development Authority - Islamabad)
+      - SBCA (Sindh Building Control Authority - Karachi)
+      - KDA (Karachi Development Authority)
+      - PDA (Peshawar Development Authority)
+      
+      Provide precise technical advice on:
+      1. Setbacks (front, rear, side) based on plot size (e.g., 5 Marla, 10 Marla, 1 Kanal).
+      2. FAR (Floor Area Ratio) and Ground Coverage limits.
+      3. Zoning (Residential vs Commercial) and Commercialization fees.
+      4. Building height limits and number of storeys allowed.
+      
+      Use local terminology. Always cite the specific authority's bylaws. If Google Search provides grounding chunks, ensure you mention them as sources.`,
+      tools: [{ googleSearch: {} }],
     },
   });
 
-  const response = await chat.sendMessage({ message });
-  return response.text;
+  let text = response.text || "I'm sorry, I couldn't find specific data for that query.";
+  
+  // Extract grounding chunks for citations
+  const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+  if (chunks && chunks.length > 0) {
+    const citations: string[] = [];
+    chunks.forEach((chunk: any) => {
+      if (chunk.web && chunk.web.uri) {
+        citations.push(`- [${chunk.web.title || 'Official Source'}](${chunk.web.uri})`);
+      }
+    });
+    
+    if (citations.length > 0) {
+      const uniqueCitations = Array.from(new Set(citations));
+      text += `\n\n**Regulatory Sources:**\n${uniqueCitations.join('\n')}`;
+    }
+  }
+
+  return text;
 };
 
 export const fetchLiveMarketData = async (city: string): Promise<MaterialPrice[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     const prompt = `Find the most recent and accurate construction material prices in ${city}, Pakistan as of ${today}. 
@@ -68,6 +104,7 @@ export const fetchLiveMarketData = async (city: string): Promise<MaterialPrice[]
 };
 
 export const analyzeConstructionSite = async (base64Image: string) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
@@ -81,6 +118,7 @@ export const analyzeConstructionSite = async (base64Image: string) => {
 };
 
 export const generateArchitecturalImage = async (prompt: string): Promise<string | null> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',

@@ -50,7 +50,7 @@ export interface ConstructionInputs {
   hasGarage: boolean;
   hasDrawing: boolean;
   hasDining: boolean;
-  steelGrade: 'Grade 40' | 'Grade 60';
+  steelGrade: 'Grade 40' | 'Grade 60' | 'Grade 75';
   floorFinish: 'Tiles' | 'Marble' | 'Concrete' | 'Granite' | 'Wooden';
   foundationType: 'Shallow/Strip' | 'Raft' | 'Piles';
   beamReinforcement: 'Standard' | 'Heavy';
